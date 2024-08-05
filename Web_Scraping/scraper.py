@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import os
 
-
 def scrape_population_data():
     url = 'https://www.worldometers.info/world-population/population-by-country/'
 
