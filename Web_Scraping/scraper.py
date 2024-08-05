@@ -1,25 +1,67 @@
 import requests
 from bs4 import BeautifulSoup
-import pandas
+import os
 
-url = 'https://www.worldometers.info/world-population/population-by-country/'
 
-response = requests.get(url)
+def scrape_population_data():
+    url = 'https://www.worldometers.info/world-population/population-by-country/'
 
-soup = BeautifulSoup(response.text, 'html.parser')
+    response = requests.get(url)
 
-rows = soup.find('table', attrs={'id': 'example2'}).find('tbody').find_all('tr')
+    soup = BeautifulSoup(response.text, 'html.parser')
 
-countries_list = []
+    rows = soup.find('table', attrs={'id': 'example2'}).find('tbody').find_all('tr')
 
-for row in rows:
-    countries_dict = {}
+    countries_list = []
 
-    country_name = row.find_all('td')[1].text
-    country_population = row.find_all('td')[2].text.replace(',', '.')
+    for row in rows:
+        countries_dict = {}
 
-    countries_dict[country_name] = country_population
+        country_name = row.find_all('td')[1].text
+        country_population = row.find_all('td')[2].text.replace(',', '.')
 
-    countries_list.append(countries_dict)
+        countries_dict[country_name] = country_population
 
-print(countries_list[0])
+        countries_list.append(countries_dict)
+
+    return countries_list
+
+
+def read_existing_data(file_path):
+    if not os.path.exists(file_path):
+        return None
+    else:
+        with open(file_path, 'r') as file_read:
+            return file_read.read()
+
+
+def write_data(file_path, data):
+    with open(file_path, 'w') as file_write:
+        file_write.write(data)
+
+
+def format_data(countries_list):
+    formatted_data = ''
+
+    position = 1
+
+    for country in countries_list:
+        for name, population in country.items():
+            formatted_data += f'Position {position}: Country name: {name}: Population: {population}\n'
+        position += 1
+
+    return formatted_data
+
+
+filepath = 'countries_population'
+new_data = format_data(scrape_population_data())
+existing_data = read_existing_data(filepath)
+
+if new_data != existing_data:
+    write_data(filepath, new_data)
+    print("New data written to the file.")
+else:
+    print("Data is already up-to-date.")
+
+with open(filepath, 'r') as file:
+    print(file.read())
